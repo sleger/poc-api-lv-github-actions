@@ -1,0 +1,26 @@
+name: 🚀 POC - Appels API Automatiques
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  api-calls:
+    name: 📡 Exécution des appels API
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 📥 Récupération du code
+        uses: actions/checkout@v4
+
+      - name: 🟢 Installation de Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: 📦 Installation des dépendances
+        run: npm install
+
+      - name: 🚀 Lancement des appels API
+        run: node api-calls.js
