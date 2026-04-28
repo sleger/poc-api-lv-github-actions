@@ -6,8 +6,8 @@ on:
       - main
 
 jobs:
-  api-calls:
-    name: 📡 Exécution des appels API
+  api-success:
+    name: ✅ Appels API - SUCCESS
     runs-on: ubuntu-latest
 
     steps:
@@ -22,5 +22,25 @@ jobs:
       - name: 📦 Installation des dépendances
         run: npm install
 
-      - name: 🚀 Lancement des appels API
+      - name: 🚀 Lancement des appels API Success
         run: node api-calls.js
+
+  api-failure:
+    name: ❌ Appels API - FAILURE
+    runs-on: ubuntu-latest
+    continue-on-error: true  # ← Ne bloque pas le workflow global
+
+    steps:
+      - name: 📥 Récupération du code
+        uses: actions/checkout@v5
+
+      - name: 🟢 Installation de Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: "24"
+
+      - name: 📦 Installation des dépendances
+        run: npm install
+
+      - name: 💥 Lancement des appels API Failure
+        run: node api-calls-failure.js
