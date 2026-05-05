@@ -118,8 +118,6 @@ function generateSummary(successResults, failureResults) {
   const globalPercent = total > 0 ? Math.round((totalSuccess / total) * 100) : 0;
 
   return `
-    <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:30px;">
-
     <div style="display:flex;gap:15px;margin-bottom:30px;">
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size:36px;font-weight:bold;color:#333;"> ${total}</div>
