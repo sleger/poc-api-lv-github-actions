@@ -6,6 +6,12 @@ const date = new Date().toLocaleDateString("fr-FR", {
   weekday: "long", year: "numeric", month: "long", day: "numeric",
 });
 
+const time = new Date().toLocaleTimeString("fr-FR", {
+  hour: "2-digit",
+  minute: "2-digit",
+  second: "2-digit",
+});
+
 // 🔧 Parse le JSON directement depuis la variable d'environnement
 function parseResults(raw) {
   try {
@@ -114,15 +120,15 @@ function generateSummary(successResults, failureResults) {
   return `
     <div style="display:flex;gap:15px;margin-bottom:30px;">
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <div style="font-size:36px;font-weight:bold;color:#333;">${total}</div>
+        <div style="font-size:36px;font-weight:bold;color:#333;"> • ${total}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Total des appels</div>
       </div>
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #28a745;">
-        <div style="font-size:36px;font-weight:bold;color:#28a745;">✅ ${totalSuccess}</div>
+        <div style="font-size:36px;font-weight:bold;color:#28a745;"> • ${totalSuccess}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Succès</div>
       </div>
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #dc3545;">
-        <div style="font-size:36px;font-weight:bold;color:#dc3545;">❌ ${totalFail}</div>
+        <div style="font-size:36px;font-weight:bold;color:#dc3545;"> • ${totalFail}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Échecs</div>
       </div>
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #0366d6;">
@@ -143,8 +149,8 @@ async function sendReport() {
       </div>
       ${generateSummary(successResults, failureResults)}
       ${generateProgressBars(successResults, failureResults)}
-      ${generateTable(successResults, "✅ Appels API — SUCCESS", "#28a745")}
-      ${generateTable(failureResults, "❌ Appels API — FAILURE", "#dc3545")}
+      ${generateTable(successResults, " Appels API — SUCCESS ", "#28a745")}
+      ${generateTable(failureResults, " Appels API — FAILURE ", "#dc3545")}
       <div style="text-align:center;margin-top:10px;">
         <a href="${runUrl}" style="background:linear-gradient(135deg,#0366d6,#6f42c1);color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;font-weight:bold;display:inline-block;">
           🔍 Voir les détails sur GitHub Actions
@@ -157,9 +163,9 @@ async function sendReport() {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "onboarding@resend.dev",
+      from: "lv-poc-api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
-      subject: `🚀 Rapport API Tests — ${date}`,
+      subject: `🚀 Rapport API Tests — ${date} - ${time}`,
       html: htmlContent,
     });
 
