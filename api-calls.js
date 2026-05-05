@@ -84,11 +84,10 @@ async function runAllCalls() {
   await runTest("PATCH",  "/posts/1", patchPost);
   await runTest("DELETE", "/posts/1", deletePost);
 
-  // 📤 Export JSON pour le rapport
-  const output = JSON.stringify(results, null, 2);
-  console.log("\n📊 RESULTS_JSON_START");
-  console.log(output);
-  console.log("📊 RESULTS_JSON_END");
+  // 📤 Export JSON dans un fichier
+  const fs = require("fs");
+  fs.writeFileSync("/tmp/success_results.json", JSON.stringify(results, null, 2));
+  console.log("✅ Résultats écrits dans /tmp/success_results.json");
 
   const hasFail = results.some((r) => r.result === "FAIL");
   if (hasFail) {
@@ -98,5 +97,6 @@ async function runAllCalls() {
     console.log("\n🎉 Tous les appels API ont été exécutés avec succès !");
   }
 }
+
 
 runAllCalls();

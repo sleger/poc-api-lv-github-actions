@@ -7,21 +7,27 @@ const date = new Date().toLocaleDateString("fr-FR", {
   weekday: "long", year: "numeric", month: "long", day: "numeric",
 });
 
-// 🔧 Parse le JSON depuis l'output GitHub Actions (encodé en base64)
-function parseResults(raw) {
+const fs = require("fs");
+
+// 🔧 Parse le JSON depuis les fichiers artifacts
+function parseResults(filePath) {
   try {
-    const decoded = Buffer.from(raw, "base64").toString("utf-8");
-    console.log("🔍 Decoded output:", decoded);
-    const match = decoded.match(/RESULTS_JSON_START\n([\s\S]*?)\nRESULTS_JSON_END/);
-    if (match) return JSON.parse(match[1]);
+    if (fs.existsSync(filePath)) {
+      const raw = fs.readFileSync(filePath, "utf-8");
+      console.log(`🔍 Lecture de ${filePath} :`, raw.substring(0, 100));
+      return JSON.parse(raw);
+    } else {
+      console.warn(`⚠️ Fichier non trouvé : ${filePath}`);
+    }
   } catch (e) {
     console.error("❌ Erreur parsing results:", e.message);
   }
   return [];
 }
 
-const successResults = parseResults(process.env.SUCCESS_DETAILS || "");
-const failureResults = parseResults(process.env.FAILURE_DETAILS || "");
+const successResults = parseResults("/tmp/success_results.json");
+const failureResults = parseResults("/tmp/failure_results.json");
+
 
 // 🎨 Couleur par méthode HTTP
 function methodColor(method) {
