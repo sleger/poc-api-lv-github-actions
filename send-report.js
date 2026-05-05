@@ -7,12 +7,16 @@ const date = new Date().toLocaleDateString("fr-FR", {
   weekday: "long", year: "numeric", month: "long", day: "numeric",
 });
 
-// 🔧 Parse le JSON depuis l'output GitHub Actions
+// 🔧 Parse le JSON depuis l'output GitHub Actions (encodé en base64)
 function parseResults(raw) {
   try {
-    const match = raw.match(/RESULTS_JSON_START\n([\s\S]*?)\nRESULTS_JSON_END/);
+    const decoded = Buffer.from(raw, "base64").toString("utf-8");
+    console.log("🔍 Decoded output:", decoded);
+    const match = decoded.match(/RESULTS_JSON_START\n([\s\S]*?)\nRESULTS_JSON_END/);
     if (match) return JSON.parse(match[1]);
-  } catch (e) {}
+  } catch (e) {
+    console.error("❌ Erreur parsing results:", e.message);
+  }
   return [];
 }
 
@@ -192,6 +196,8 @@ function generateSummary(successResults, failureResults) {
 // 📧 Envoi de l'email
 async function sendReport() {
   console.log("📧 Génération et envoi du rapport...");
+  console.log("🔍 Success results:", successResults.length);
+  console.log("🔍 Failure results:", failureResults.length);
 
   const htmlContent = `
     <div style="font-family: Arial, sans-serif; max-width: 800px; margin: 0 auto; background-color: #f0f2f5; padding: 20px;">
