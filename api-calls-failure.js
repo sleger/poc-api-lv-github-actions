@@ -2,103 +2,115 @@ const axios = require("axios");
 
 const BASE_URL = "https://jsonplaceholder.typicode.com";
 
+const results = [];
+
+// 🔧 Helper pour enregistrer les résultats
+async function runTest(method, route, fn) {
+  const start = Date.now();
+  try {
+    const { status, data } = await fn();
+    const duration = Date.now() - start;
+    results.push({
+      method,
+      route,
+      status,
+      duration,
+      result: "SUCCESS",
+      error: null,
+    });
+    console.log(`✅ [${method}] ${route} → ${status} (${duration}ms)`);
+  } catch (error) {
+    const duration = Date.now() - start;
+    results.push({
+      method,
+      route,
+      status: error.response?.status || "ERR",
+      duration,
+      result: "FAIL",
+      error: error.message,
+    });
+    console.error(`❌ [${method}] ${route} → ${error.message} (${duration}ms)`);
+  }
+}
+
 // ❌ GET - ID inexistant (404)
 async function getPostNotFound() {
   console.log("\n📥 [GET] Récupération d'un post inexistant...");
   const response = await axios.get(`${BASE_URL}/posts/99999`);
   if (response.status === 200 && !response.data?.id) {
-    throw new Error("❌ Post introuvable - Réponse vide reçue (404 simulé)");
+    throw new Error("Post introuvable - Réponse vide reçue (404 simulé)");
   }
-  console.log("✅ Réponse GET :", response.data);
+  return response;
 }
 
-// ❌ POST - Body manquant (données invalides)
+// ❌ POST - Body manquant
 async function createPostInvalid() {
   console.log("\n📤 [POST] Création avec un body invalide...");
   const response = await axios.post(`${BASE_URL}/posts`, {});
   if (!response.data?.title) {
-    throw new Error("❌ Création échouée - Le titre est manquant dans la réponse");
+    throw new Error("Création échouée - Le titre est manquant dans la réponse");
   }
-  console.log("✅ Réponse POST :", response.data);
+  return response;
 }
 
-// ❌ PUT - Mauvaise URL (endpoint inexistant)
+// ❌ PUT - Mauvaise URL
 async function updatePostWrongEndpoint() {
   console.log("\n🔄 [PUT] Mise à jour sur un endpoint inexistant...");
-  const response = await axios.put(`${BASE_URL}/wrong-endpoint/1`, {
+  return await axios.put(`${BASE_URL}/wrong-endpoint/1`, {
     title: "Test",
   });
-  if (response.status !== 200) {
-    throw new Error(`❌ PUT échoué - Status reçu : ${response.status}`);
-  }
-  console.log("✅ Réponse PUT :", response.data);
 }
 
-// ❌ PATCH - Simule une incohérence de données métier
+// ❌ PATCH - Modification non sauvegardée
 async function patchPostMissingField() {
   console.log("\n🩹 [PATCH] Vérification de cohérence après modification...");
+  const originalTitle =
+    "sunt aut facere repellat provident occaecati excepturi optio reprehenderit";
 
-  const originalTitle = "sunt aut facere repellat provident occaecati excepturi optio reprehenderit";
-  
-  // On patch avec un nouveau titre
   await axios.patch(`${BASE_URL}/posts/1`, {
     title: "Nouveau titre modifié",
   });
 
-  // On re-fetch le post pour vérifier (JSONPlaceholder ne sauvegarde pas)
   const check = await axios.get(`${BASE_URL}/posts/1`);
-
-  // On s'attend à ce que le titre ait changé, mais JSONPlaceholder retourne l'original
-  // Donc si le titre est toujours l'original → la modification n'a pas été sauvegardée → FAIL
   if (check.data?.title === originalTitle) {
     throw new Error(
-      `❌ PATCH échoué - Le titre n'a pas été sauvegardé, toujours : "${check.data?.title}"`
+      `PATCH échoué - Le titre n'a pas été sauvegardé : "${check.data?.title}"`
     );
   }
-
-  console.log("✅ Réponse PATCH :", check.data);
+  return check;
 }
 
-// ❌ DELETE - Vérifie que le post est bien supprimé en essayant de le récupérer
+// ❌ DELETE - Post toujours présent
 async function deletePostInvalidId() {
-  console.log("\n🗑️ [DELETE] Suppression puis vérification que le post existe toujours...");
+  console.log("\n🗑️ [DELETE] Suppression puis vérification...");
   await axios.delete(`${BASE_URL}/posts/1`);
-
-  // JSONPlaceholder ne supprime pas vraiment, donc ce GET va réussir → on lève une erreur
   const check = await axios.get(`${BASE_URL}/posts/1`);
   if (check.data?.id === 1) {
     throw new Error(
-      "❌ DELETE échoué - Le post existe toujours après suppression (id: 1 toujours présent)"
+      "DELETE échoué - Le post existe toujours après suppression"
     );
   }
-  console.log("✅ Suppression confirmée");
+  return check;
 }
 
-// 🚀 Lancement de tous les appels en échec
+// 🚀 Lancement
 async function runAllFailures() {
-  console.log("🚀 Démarrage des appels API en FAILURE...\n");
+  console.log("🚀 Démarrage des appels API FAILURE...\n");
 
-  const tests = [
-    { name: "GET - Post inexistant", fn: getPostNotFound },
-    { name: "POST - Body invalide", fn: createPostInvalid },
-    { name: "PUT - Mauvais endpoint", fn: updatePostWrongEndpoint },
-    { name: "PATCH - Titre incorrect", fn: patchPostMissingField },
-    { name: "DELETE - Post toujours présent", fn: deletePostInvalidId },
-  ];
+  await runTest("GET",    "/posts/99999",      getPostNotFound);
+  await runTest("POST",   "/posts",            createPostInvalid);
+  await runTest("PUT",    "/wrong-endpoint/1", updatePostWrongEndpoint);
+  await runTest("PATCH",  "/posts/1",          patchPostMissingField);
+  await runTest("DELETE", "/posts/1",          deletePostInvalidId);
 
-  let hasFailure = false;
+  // 📤 Export JSON pour le rapport
+  const output = JSON.stringify(results, null, 2);
+  console.log("\n📊 RESULTS_JSON_START");
+  console.log(output);
+  console.log("📊 RESULTS_JSON_END");
 
-  for (const test of tests) {
-    try {
-      await test.fn();
-      console.log(`✅ [PASS] ${test.name}`);
-    } catch (error) {
-      console.error(`❌ [FAIL] ${test.name} → ${error.message}`);
-      hasFailure = true;
-    }
-  }
-
-  if (hasFailure) {
+  const hasFail = results.some((r) => r.result === "FAIL");
+  if (hasFail) {
     console.log("\n💥 Certains tests ont échoué !");
     process.exit(1);
   } else {

@@ -2,65 +2,100 @@ const axios = require("axios");
 
 const BASE_URL = "https://jsonplaceholder.typicode.com";
 
-// ✅ GET - Récupérer un post
-async function getPost() {
-  console.log("\n📥 [GET] Récupération du post #1...");
-  const response = await axios.get(`${BASE_URL}/posts/1`);
-  console.log("✅ Réponse GET :", response.data);
+const results = [];
+
+// 🔧 Helper pour enregistrer les résultats
+async function runTest(method, route, fn) {
+  const start = Date.now();
+  try {
+    const { status, data } = await fn();
+    const duration = Date.now() - start;
+    results.push({
+      method,
+      route,
+      status,
+      duration,
+      result: "SUCCESS",
+      error: null,
+    });
+    console.log(`✅ [${method}] ${route} → ${status} (${duration}ms)`);
+  } catch (error) {
+    const duration = Date.now() - start;
+    results.push({
+      method,
+      route,
+      status: error.response?.status || "ERR",
+      duration,
+      result: "FAIL",
+      error: error.message,
+    });
+    console.error(`❌ [${method}] ${route} → ${error.message} (${duration}ms)`);
+  }
 }
 
-// ✅ POST - Créer un nouveau post
+// ✅ GET
+async function getPost() {
+  console.log("\n📥 [GET] Récupération du post #1...");
+  return await axios.get(`${BASE_URL}/posts/1`);
+}
+
+// ✅ POST
 async function createPost() {
   console.log("\n📤 [POST] Création d'un nouveau post...");
-  const response = await axios.post(`${BASE_URL}/posts`, {
+  return await axios.post(`${BASE_URL}/posts`, {
     title: "Mon POC GitHub Actions",
     body: "Test d'appel API depuis GitHub Actions",
     userId: 1,
   });
-  console.log("✅ Réponse POST :", response.data);
 }
 
-// ✅ PUT - Remplacer un post existant
+// ✅ PUT
 async function updatePost() {
   console.log("\n🔄 [PUT] Mise à jour complète du post #1...");
-  const response = await axios.put(`${BASE_URL}/posts/1`, {
+  return await axios.put(`${BASE_URL}/posts/1`, {
     id: 1,
     title: "Titre mis à jour",
     body: "Contenu entièrement remplacé",
     userId: 1,
   });
-  console.log("✅ Réponse PUT :", response.data);
 }
 
-// ✅ PATCH - Modifier partiellement un post
+// ✅ PATCH
 async function patchPost() {
   console.log("\n🩹 [PATCH] Modification partielle du post #1...");
-  const response = await axios.patch(`${BASE_URL}/posts/1`, {
+  return await axios.patch(`${BASE_URL}/posts/1`, {
     title: "Titre modifié partiellement",
   });
-  console.log("✅ Réponse PATCH :", response.data);
 }
 
-// ✅ DELETE - Supprimer un post
+// ✅ DELETE
 async function deletePost() {
   console.log("\n🗑️ [DELETE] Suppression du post #1...");
-  const response = await axios.delete(`${BASE_URL}/posts/1`);
-  console.log("✅ Réponse DELETE : Post supprimé avec succès", response.status);
+  return await axios.delete(`${BASE_URL}/posts/1`);
 }
 
-// 🚀 Lancement de tous les appels
+// 🚀 Lancement
 async function runAllCalls() {
-  console.log("🚀 Démarrage des appels API...\n");
-  try {
-    await getPost();
-    await createPost();
-    await updatePost();
-    await patchPost();
-    await deletePost();
-    console.log("\n🎉 Tous les appels API ont été exécutés avec succès !");
-  } catch (error) {
-    console.error("❌ Erreur lors d'un appel API :", error.message);
+  console.log("🚀 Démarrage des appels API SUCCESS...\n");
+
+  await runTest("GET",    "/posts/1", getPost);
+  await runTest("POST",   "/posts",   createPost);
+  await runTest("PUT",    "/posts/1", updatePost);
+  await runTest("PATCH",  "/posts/1", patchPost);
+  await runTest("DELETE", "/posts/1", deletePost);
+
+  // 📤 Export JSON pour le rapport
+  const output = JSON.stringify(results, null, 2);
+  console.log("\n📊 RESULTS_JSON_START");
+  console.log(output);
+  console.log("📊 RESULTS_JSON_END");
+
+  const hasFail = results.some((r) => r.result === "FAIL");
+  if (hasFail) {
+    console.log("\n💥 Certains tests ont échoué !");
     process.exit(1);
+  } else {
+    console.log("\n🎉 Tous les appels API ont été exécutés avec succès !");
   }
 }
 
