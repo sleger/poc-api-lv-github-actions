@@ -124,15 +124,21 @@ function generateSummary(successResults, failureResults) {
         <div style="font-size:13px;color:#888;margin-top:5px;">Total des appels</div>
       </div>
 
+      <div> </div>
+
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #28a745;">
         <div style="font-size:36px;font-weight:bold;color:#28a745;"> ✅ ${totalSuccess}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Succès</div>
       </div>
 
+      <div> </div>
+
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #dc3545;">
         <div style="font-size:36px;font-weight:bold;color:#dc3545;"> ❌ ${totalFail}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Échecs</div>
       </div>
+
+      <div> </div>
 
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #0366d6;">
         <div style="font-size:36px;font-weight:bold;color:#0366d6;">${globalPercent}%</div>
