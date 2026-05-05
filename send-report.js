@@ -6,27 +6,26 @@ const date = new Date().toLocaleDateString("fr-FR", {
   weekday: "long", year: "numeric", month: "long", day: "numeric",
 });
 
-// 🔧 Parse le JSON depuis l'output encodé en base64
+// 🔧 Parse le JSON directement depuis la variable d'environnement
 function parseResults(raw) {
   try {
-    const decoded = Buffer.from(raw, "base64").toString("utf-8");
-    console.log("🔍 Decoded (100 premiers chars):", decoded.substring(0, 100));
-    const match = decoded.match(/RESULTS_JSON_START\n([\s\S]*?)\nRESULTS_JSON_END/);
-    if (match) {
-      return JSON.parse(match[1]);
+    if (!raw || raw.trim() === "") {
+      console.warn("Variable vide !");
+      return [];
     }
-    console.warn("⚠️ Aucun JSON trouvé dans l'output");
+    console.log("Parsing (100 premiers chars):", raw.substring(0, 100));
+    return JSON.parse(raw);
   } catch (e) {
-    console.error("❌ Erreur parsing:", e.message);
+    console.error("Erreur parsing:", e.message);
+    return [];
   }
-  return [];
 }
 
 const successResults = parseResults(process.env.SUCCESS_DETAILS || "");
 const failureResults = parseResults(process.env.FAILURE_DETAILS || "");
 
-console.log("✅ Success results count:", successResults.length);
-console.log("❌ Failure results count:", failureResults.length);
+console.log("Success results:", successResults.length);
+console.log("Failure results:", failureResults.length);
 
 function methodColor(method) {
   const colors = {
@@ -77,8 +76,7 @@ function generateTable(results, title, color) {
         </thead>
         <tbody>${rows}</tbody>
       </table>
-    </div>
-  `;
+    </div>`;
 }
 
 function generateProgressBars(successResults, failureResults) {
@@ -135,7 +133,7 @@ function generateSummary(successResults, failureResults) {
 }
 
 async function sendReport() {
-  console.log("📧 Génération et envoi du rapport...");
+  console.log("Generation et envoi du rapport...");
 
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#f0f2f5;padding:20px;">
@@ -166,13 +164,13 @@ async function sendReport() {
     });
 
     if (error) {
-      console.error("❌ Erreur envoi email :", error);
+      console.error("Erreur envoi email:", error);
       process.exit(1);
     }
 
-    console.log("✅ Rapport envoyé avec succès ! ID :", data.id);
+    console.log("Rapport envoye ! ID:", data.id);
   } catch (err) {
-    console.error("❌ Erreur :", err.message);
+    console.error("Erreur:", err.message);
     process.exit(1);
   }
 }
