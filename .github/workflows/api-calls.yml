@@ -32,6 +32,11 @@ jobs:
           echo "details<<EOF" >> $GITHUB_OUTPUT
           echo "$OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
+      
+      - name: 🔍 Debug output SUCCESS
+        run: |
+          echo "=== DEBUG SUCCESS OUTPUT ==="
+          cat $GITHUB_OUTPUT
 
   api-failure:
     name: ❌ Appels API - FAILURE
@@ -61,6 +66,11 @@ jobs:
           echo "$OUTPUT" >> $GITHUB_OUTPUT
           echo "EOF" >> $GITHUB_OUTPUT
 
+      - name: 🔍 Debug output FAILURE
+        run: |
+          echo "=== DEBUG FAILURE OUTPUT ==="
+          cat $GITHUB_OUTPUT
+
   send-report:
     name: 📧 Envoi du rapport email
     runs-on: ubuntu-latest
@@ -87,4 +97,9 @@ jobs:
           SUCCESS_DETAILS: ${{ needs.api-success.outputs.details }}
           FAILURE_DETAILS: ${{ needs.api-failure.outputs.details }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
-        run: node send-report.js
+        run: |
+          echo "=== DEBUG SUCCESS_DETAILS ==="
+          echo "$SUCCESS_DETAILS"
+          echo "=== DEBUG FAILURE_DETAILS ==="
+          echo "$FAILURE_DETAILS"
+          node send-report.js
