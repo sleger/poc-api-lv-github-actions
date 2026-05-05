@@ -9,8 +9,6 @@ jobs:
   api-success:
     name: ✅ Appels API - SUCCESS
     runs-on: ubuntu-latest
-    outputs:
-      details: ${{ steps.run.outputs.details }}
 
     steps:
       - name: 📥 Récupération du code
@@ -19,7 +17,7 @@ jobs:
       - name: 🟢 Installation de Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: 24
 
       - name: 📦 Installation des dépendances
         run: npm install
@@ -29,21 +27,19 @@ jobs:
         run: |
           node api-calls.js 2>&1 | tee /tmp/success_output.txt || true
           ENCODED=$(base64 -w 0 /tmp/success_output.txt)
-          echo "details=$ENCODED" >> $GITHUB_OUTPUT
+          echo details=$ENCODED >> $GITHUB_OUTPUT
 
       - name: 🔍 Debug output SUCCESS
         run: |
-          echo "=== DEBUG GITHUB_OUTPUT ==="
+          echo === DEBUG GITHUB_OUTPUT ===
           cat $GITHUB_OUTPUT
-          echo "=== DEBUG FILE ==="
+          echo === DEBUG FILE ===
           cat /tmp/success_output.txt
 
   api-failure:
     name: ❌ Appels API - FAILURE
     runs-on: ubuntu-latest
     continue-on-error: true
-    outputs:
-      details: ${{ steps.run.outputs.details }}
 
     steps:
       - name: 📥 Récupération du code
@@ -52,7 +48,7 @@ jobs:
       - name: 🟢 Installation de Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: 24
 
       - name: 📦 Installation des dépendances
         run: npm install
@@ -62,13 +58,13 @@ jobs:
         run: |
           node api-calls-failure.js 2>&1 | tee /tmp/failure_output.txt || true
           ENCODED=$(base64 -w 0 /tmp/failure_output.txt)
-          echo "details=$ENCODED" >> $GITHUB_OUTPUT
+          echo details=$ENCODED >> $GITHUB_OUTPUT
 
       - name: 🔍 Debug output FAILURE
         run: |
-          echo "=== DEBUG GITHUB_OUTPUT ==="
+          echo === DEBUG GITHUB_OUTPUT ===
           cat $GITHUB_OUTPUT
-          echo "=== DEBUG FILE ==="
+          echo === DEBUG FILE ===
           cat /tmp/failure_output.txt
 
   send-report:
@@ -84,7 +80,7 @@ jobs:
       - name: 🟢 Installation de Node.js
         uses: actions/setup-node@v5
         with:
-          node-version: "24"
+          node-version: 24
 
       - name: 📦 Installation des dépendances
         run: npm install
@@ -98,8 +94,8 @@ jobs:
           FAILURE_DETAILS: ${{ needs.api-failure.outputs.details }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
         run: |
-          echo "=== DEBUG SUCCESS_DETAILS ==="
-          echo "$SUCCESS_DETAILS" | base64 -d
-          echo "=== DEBUG FAILURE_DETAILS ==="
-          echo "$FAILURE_DETAILS" | base64 -d
+          echo === DEBUG SUCCESS_DETAILS ===
+          echo $SUCCESS_DETAILS | base64 -d
+          echo === DEBUG FAILURE_DETAILS ===
+          echo $FAILURE_DETAILS | base64 -d
           node send-report.js
