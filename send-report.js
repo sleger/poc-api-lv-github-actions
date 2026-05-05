@@ -118,19 +118,24 @@ function generateSummary(successResults, failureResults) {
   const globalPercent = total > 0 ? Math.round((totalSuccess / total) * 100) : 0;
 
   return `
+    <div style="display:flex; justify-content:center; align-items:center; gap:20px; margin-bottom:30px;">
+
     <div style="display:flex;gap:15px;margin-bottom:30px;">
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-        <div style="font-size:36px;font-weight:bold;color:#333;"> • ${total}</div>
+        <div style="font-size:36px;font-weight:bold;color:#333;"> ${total}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Total des appels</div>
       </div>
+
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #28a745;">
-        <div style="font-size:36px;font-weight:bold;color:#28a745;"> • ${totalSuccess}</div>
+        <div style="font-size:36px;font-weight:bold;color:#28a745;"> ✅ ${totalSuccess}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Succès</div>
       </div>
+
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #dc3545;">
-        <div style="font-size:36px;font-weight:bold;color:#dc3545;"> • ${totalFail}</div>
+        <div style="font-size:36px;font-weight:bold;color:#dc3545;"> ❌ ${totalFail}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Échecs</div>
       </div>
+
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #0366d6;">
         <div style="font-size:36px;font-weight:bold;color:#0366d6;">${globalPercent}%</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Taux de succès</div>
@@ -163,7 +168,7 @@ async function sendReport() {
 
   try {
     const { data, error } = await resend.emails.send({
-      from: "lv-poc-api-report@resend.dev",
+      from: "api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
       subject: `🚀 Rapport API Tests — ${date} - ${time}`,
       html: htmlContent,
