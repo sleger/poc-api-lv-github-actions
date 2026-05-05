@@ -55,7 +55,7 @@ jobs:
       - name: 💥 Lancement des appels API Failure
         id: run
         run: |
-          OUTPUT=$(node api-calls-failure.js 2>&1)
+          OUTPUT=$(node api-calls-failure.js 2>&1) || true
           echo "$OUTPUT"
           echo "details<<EOF" >> $GITHUB_OUTPUT
           echo "$OUTPUT" >> $GITHUB_OUTPUT
