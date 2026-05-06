@@ -12,17 +12,17 @@ const time = new Date().toLocaleTimeString("fr-FR", {
   second: "2-digit",
 });
 
-// 🔧 Parse le JSON directement depuis la variable d'environnement
+// 🔧 Parse JSON directly from the environment variable
 function parseResults(raw) {
   try {
     if (!raw || raw.trim() === "") {
-      console.warn("Variable vide !");
+      console.warn("Empty variable!");
       return [];
     }
-    console.log("Parsing (100 premiers chars):", raw.substring(0, 100));
+    console.log("Parsing (first 100 chars):", raw.substring(0, 100));
     return JSON.parse(raw);
   } catch (e) {
-    console.error("Erreur parsing:", e.message);
+    console.error("Parsing error:", e.message);
     return [];
   }
 }
@@ -72,12 +72,12 @@ function generateTable(results, title, color) {
       <table style="width:100%;border-collapse:collapse;background:white;border-radius:0 0 8px 8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <thead>
           <tr style="background-color:#f8f9fa;border-bottom:2px solid #dee2e6;">
-            <th style="padding:10px 15px;text-align:left;font-size:13px;color:#555;">Méthode</th>
+            <th style="padding:10px 15px;text-align:left;font-size:13px;color:#555;">Method</th>
             <th style="padding:10px 15px;text-align:left;font-size:13px;color:#555;">Route</th>
             <th style="padding:10px 15px;text-align:center;font-size:13px;color:#555;">Status</th>
-            <th style="padding:10px 15px;text-align:center;font-size:13px;color:#555;">Durée</th>
-            <th style="padding:10px 15px;text-align:center;font-size:13px;color:#555;">Résultat</th>
-            <th style="padding:10px 15px;text-align:left;font-size:13px;color:#555;">Erreur</th>
+            <th style="padding:10px 15px;text-align:center;font-size:13px;color:#555;">Duration</th>
+            <th style="padding:10px 15px;text-align:center;font-size:13px;color:#555;">Result</th>
+            <th style="padding:10px 15px;text-align:left;font-size:13px;color:#555;">Error</th>
           </tr>
         </thead>
         <tbody>${rows}</tbody>
@@ -96,7 +96,7 @@ function generateProgressBars(successResults, failureResults) {
       <div style="margin-bottom:12px;">
         <div style="display:flex;justify-content:space-between;margin-bottom:4px;">
           <span style="font-weight:bold;font-size:13px;color:${methodColor(method)};">${method}</span>
-          <span style="font-size:13px;color:#555;">${s} succès / ${f} échec — ${percent}%</span>
+          <span style="font-size:13px;color:#555;">${s} success / ${f} failure — ${percent}%</span>
         </div>
         <div style="background-color:#f8d7da;border-radius:10px;height:14px;overflow:hidden;">
           <div style="width:${percent}%;background-color:${methodColor(method)};height:100%;border-radius:10px;"></div>
@@ -106,7 +106,7 @@ function generateProgressBars(successResults, failureResults) {
 
   return `
     <div style="background:white;border-radius:8px;padding:20px;margin-bottom:30px;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
-      <h2 style="margin:0 0 20px 0;font-size:16px;color:#333;">📈 Taux de succès par méthode HTTP</h2>
+      <h2 style="margin:0 0 20px 0;font-size:16px;color:#333;">📈 Success rate by HTTP method</h2>
       ${bars}
     </div>`;
 }
@@ -121,52 +121,52 @@ function generateSummary(successResults, failureResults) {
     <div style="display:flex;gap:15px;margin-bottom:30px;">
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <div style="font-size:36px;font-weight:bold;color:#333;"> ${total}</div>
-        <div style="font-size:13px;color:#888;margin-top:5px;">Total des appels</div>
+        <div style="font-size:13px;color:#888;margin-top:5px;">Total calls</div>
       </div>
 
       <div>&nbsp;</div>
 
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #28a745;">
         <div style="font-size:36px;font-weight:bold;color:#28a745;"> ✅ ${totalSuccess}</div>
-        <div style="font-size:13px;color:#888;margin-top:5px;">Succès</div>
+        <div style="font-size:13px;color:#888;margin-top:5px;">Success</div>
       </div>
 
       <div>&nbsp;</div>
 
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #dc3545;">
         <div style="font-size:36px;font-weight:bold;color:#dc3545;"> ❌ ${totalFail}</div>
-        <div style="font-size:13px;color:#888;margin-top:5px;">Échecs</div>
+        <div style="font-size:13px;color:#888;margin-top:5px;">Failures</div>
       </div>
 
       <div>&nbsp;</div>
 
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #0366d6;">
         <div style="font-size:36px;font-weight:bold;color:#0366d6;">${globalPercent}%</div>
-        <div style="font-size:13px;color:#888;margin-top:5px;">Taux de succès</div>
+        <div style="font-size:13px;color:#888;margin-top:5px;">Success rate</div>
       </div>
     </div>`;
 }
 
 async function sendReport() {
-  console.log("Generation et envoi du rapport...");
+  console.log("Generating and sending report...");
 
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#f0f2f5;padding:20px;">
       <div style="background:linear-gradient(135deg,#0366d6,#6f42c1);padding:30px;border-radius:12px;margin-bottom:25px;text-align:center;">
-        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;">🚀 POC GitHub Actions — Rapport API</h1>
+        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;">🚀 POC GitHub Actions — API Report</h1>
         <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px;">📅 ${date}</p>
       </div>
       ${generateSummary(successResults, failureResults)}
       ${generateProgressBars(successResults, failureResults)}
-      ${generateTable(successResults, " Appels API — SUCCESS ", "#28a745")}
-      ${generateTable(failureResults, " Appels API — FAILURE ", "#dc3545")}
+      ${generateTable(successResults, " API Calls — SUCCESS ", "#28a745")}
+      ${generateTable(failureResults, " API Calls — FAILURE ", "#dc3545")}
       <div style="text-align:center;margin-top:10px;">
         <a href="${runUrl}" style="background:linear-gradient(135deg,#0366d6,#6f42c1);color:white;padding:14px 32px;text-decoration:none;border-radius:8px;font-size:15px;font-weight:bold;display:inline-block;">
-          🔍 Voir les détails sur GitHub Actions
+          🔍 View details on GitHub Actions
         </a>
       </div>
       <div style="text-align:center;margin-top:25px;padding:15px;">
-        <p style="margin:0;font-size:12px;color:#999;">🤖 Rapport généré automatiquement par GitHub Actions</p>
+        <p style="margin:0;font-size:12px;color:#999;">🤖 Report automatically generated by GitHub Actions</p>
       </div>
     </div>`;
 
@@ -174,18 +174,18 @@ async function sendReport() {
     const { data, error } = await resend.emails.send({
       from: "api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
-      subject: `🚀 Rapport API Tests — ${date} - ${time}`,
+      subject: `🚀 API Tests Report — ${date} - ${time}`,
       html: htmlContent,
     });
 
     if (error) {
-      console.error("Erreur envoi email:", error);
+      console.error("Email sending error:", error);
       process.exit(1);
     }
 
-    console.log("Rapport envoye ! ID:", data.id);
+    console.log("Report sent! ID:", data.id);
   } catch (err) {
-    console.error("Erreur:", err.message);
+    console.error("Error:", err.message);
     process.exit(1);
   }
 }

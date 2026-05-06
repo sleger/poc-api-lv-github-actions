@@ -28,47 +28,47 @@ async function getPost() {
 }
 async function createPost() {
   return await axios.post(`${BASE_URL}/posts`, {
-    title: "Mon POC GitHub Actions",
-    body: "Test depuis GitHub Actions",
+    title: "My POC GitHub Actions",
+    body: "Test from GitHub Actions",
     userId: 1,
   });
 }
 async function updatePost() {
   return await axios.put(`${BASE_URL}/posts/1`, {
-    id: 1, title: "Titre mis a jour",
-    body: "Contenu remplace", userId: 1,
+    id: 1, title: "Updated title",
+    body: "Replaced content", userId: 1,
   });
 }
 async function patchPost() {
-  return await axios.patch(`${BASE_URL}/posts/1`, { title: "Titre modifie" });
+  return await axios.patch(`${BASE_URL}/posts/1`, { title: "Modified title" });
 }
 async function deletePost() {
   return await axios.delete(`${BASE_URL}/posts/1`);
 }
 
 async function runAllCalls() {
-  console.log("Demarrage des appels API SUCCESS...");
+  console.log("Starting SUCCESS API calls...");
   await runTest("GET",    "/posts/1", getPost);
   await runTest("POST",   "/posts",   createPost);
   await runTest("PUT",    "/posts/1", updatePost);
   await runTest("PATCH",  "/posts/1", patchPost);
   await runTest("DELETE", "/posts/1", deletePost);
 
-  // Ecriture dans GITHUB_OUTPUT
+  // Writing to GITHUB_OUTPUT
   const json = JSON.stringify(results);
   const githubOutput = process.env.GITHUB_OUTPUT;
   if (githubOutput) {
     fs.appendFileSync(githubOutput, `details=${json}\n`);
-    console.log("Resultats ecrits dans GITHUB_OUTPUT");
+    console.log("Results written to GITHUB_OUTPUT");
   } else {
-    console.log("GITHUB_OUTPUT non disponible (mode local)");
+    console.log("GITHUB_OUTPUT not available (local mode)");
   }
 
   console.log("JSON:", json);
 
   const hasFail = results.some((r) => r.result === "FAIL");
   if (hasFail) process.exit(1);
-  else console.log("Tous les appels API ont reussi !");
+  else console.log("All API calls succeeded!");
 }
 
 runAllCalls();

@@ -1,4 +1,4 @@
-name: 🚀 POC - Appels API Automatiques
+name: 🚀 POC - Automatic API Calls
 
 on:
   push:
@@ -7,24 +7,24 @@ on:
 
 jobs:
   api-success:
-    name: ✅ Appels API - SUCCESS
+    name: ✅ API Calls - SUCCESS
     runs-on: ubuntu-latest
     outputs:
       details: ${{ steps.run.outputs.details }}
 
     steps:
-      - name: 📥 Récupération du code
+      - name: 📥 Code Checkout
         uses: actions/checkout@v5
 
-      - name: 🟢 Installation de Node.js
+      - name: 🟢 Node.js Installation
         uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      - name: 📦 Installation des dépendances
+      - name: 📦 Dependencies Installation
         run: npm install
 
-      - name: 🚀 Lancement des appels API Success
+      - name: 🚀 Running Success API Calls
         id: run
         run: node api-calls.js
 
@@ -34,25 +34,25 @@ jobs:
           cat $GITHUB_OUTPUT
 
   api-failure:
-    name: ❌ Appels API - FAILURE
+    name: ❌ API Calls - FAILURE
     runs-on: ubuntu-latest
     continue-on-error: true
     outputs:
       details: ${{ steps.run.outputs.details }}
 
     steps:
-      - name: 📥 Récupération du code
+      - name: 📥 Code Checkout
         uses: actions/checkout@v5
 
-      - name: 🟢 Installation de Node.js
+      - name: 🟢 Node.js Installation
         uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      - name: 📦 Installation des dépendances
+      - name: 📦 Dependencies Installation
         run: npm install
 
-      - name: 💥 Lancement des appels API Failure
+      - name: 💥 Running Failure API Calls
         id: run
         continue-on-error: true
         run: node api-calls-failure.js
@@ -63,24 +63,24 @@ jobs:
           cat $GITHUB_OUTPUT
 
   send-report:
-    name: 📧 Envoi du rapport email
+    name: 📧 Sending Email Report
     runs-on: ubuntu-latest
     needs: [api-success, api-failure]
     if: always()
 
     steps:
-      - name: 📥 Récupération du code
+      - name: 📥 Code Checkout
         uses: actions/checkout@v5
 
-      - name: 🟢 Installation de Node.js
+      - name: 🟢 Node.js Installation
         uses: actions/setup-node@v5
         with:
           node-version: 24
 
-      - name: 📦 Installation des dépendances
+      - name: 📦 Dependencies Installation
         run: npm install
 
-      - name: 📧 Envoi du rapport
+      - name: 📧 Sending Report
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}
