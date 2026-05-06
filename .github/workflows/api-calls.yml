@@ -159,23 +159,24 @@ jobs:
           echo "=== GITHUB_OUTPUT ==="
           cat $GITHUB_OUTPUT
 
-  generate-and-commit-report: # New job for report generation and commit
+  generate-and-commit-report:
     name: 📝 Generate and Commit Report
     runs-on: ubuntu-latest
     needs: [api-success, api-failure]
-    if: always() # Run even if previous jobs failed, to ensure report is generated
+    if: always()
 
-    permissions: # Explicitly grant permissions for contents write
-      contents: write
+    # IMPORTANT: Ajoutez ces permissions au niveau du JOB
+    permissions:
+      contents: write # Permet au workflow de modifier le contenu du dépôt (ajouter/commiter/pousser)
 
     steps:
       - name: 📥 Code Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v4 # Utilisez v4 pour les permissions de GITHUB_TOKEN
 
       - name: 🟢 Node.js Installation
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v4 # Utilisez v4
         with:
-          node-version: 22
+          node-version: 20 # Recommandé : une version LTS stable
 
       - name: 📦 Dependencies Installation
         run: npm install
@@ -199,22 +200,16 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPORT_FILE_PATH: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html
         run: |
+          mkdir -p report # Assure que le dossier 'report' existe
           node send-report.js
           echo "Generated report at: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html"
           echo "Report generation completed."
 
-      - name: ➕ Add report to .gitignore (if not present)
-        run: |
-          if ! grep -q "^report/$" .gitignore; then
-            echo "report/" >> .gitignore
-            echo "Added report/ to .gitignore"
-          else
-            echo "report/ already in .gitignore"
-          fi
+      # L'étape pour ajouter au .gitignore est supprimée ici car nous ne voulons PAS ignorer 'report/'
 
       - name: 📤 Commit and Push Report
         run: |
-          git add report/ .gitignore # <<< Added 'git add report/' and '.gitignore'
+          git add report/ # Ajoute le contenu du dossier 'report'
           git commit -m "add and save report_${{ steps.get_timestamp.outputs.TIMESTAMP }}" || echo "No changes to commit"
           git push
 
