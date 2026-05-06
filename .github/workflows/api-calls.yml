@@ -1,3 +1,100 @@
+# name: 🚀 POC - Automatic API Calls
+
+# on:
+#   push:
+#     branches:
+#       - main
+
+# jobs:
+#   api-success:
+#     name: ✅ API Calls - SUCCESS
+#     runs-on: ubuntu-latest
+#     outputs:
+#       details: ${{ steps.run.outputs.details }}
+
+#     steps:
+#       - name: 📥 Code Checkout
+#         uses: actions/checkout@v5
+
+#       - name: 🟢 Node.js Installation
+#         uses: actions/setup-node@v5
+#         with:
+#           node-version: 24
+
+#       - name: 📦 Dependencies Installation
+#         run: npm install
+
+#       - name: 🚀 Running Success API Calls
+#         id: run
+#         run: node api-calls.js
+
+#       - name: 🔍 Debug output SUCCESS
+#         run: |
+#           echo "=== GITHUB_OUTPUT ==="
+#           cat $GITHUB_OUTPUT
+
+#   api-failure:
+#     name: ❌ API Calls - FAILURE
+#     runs-on: ubuntu-latest
+#     continue-on-error: true
+#     outputs:
+#       details: ${{ steps.run.outputs.details }}
+
+#     steps:
+#       - name: 📥 Code Checkout
+#         uses: actions/checkout@v5
+
+#       - name: 🟢 Node.js Installation
+#         uses: actions/setup-node@v5
+#         with:
+#           node-version: 24
+
+#       - name: 📦 Dependencies Installation
+#         run: npm install
+
+#       - name: 💥 Running Failure API Calls
+#         id: run
+#         continue-on-error: true
+#         run: node api-calls-failure.js
+
+#       - name: 🔍 Debug output FAILURE
+#         run: |
+#           echo "=== GITHUB_OUTPUT ==="
+#           cat $GITHUB_OUTPUT
+
+#   send-report:
+#     name: 📧 Sending Email Report
+#     runs-on: ubuntu-latest
+#     needs: [api-success, api-failure]
+#     if: always()
+
+#     steps:
+#       - name: 📥 Code Checkout
+#         uses: actions/checkout@v5
+
+#       - name: 🟢 Node.js Installation
+#         uses: actions/setup-node@v5
+#         with:
+#           node-version: 24
+
+#       - name: 📦 Dependencies Installation
+#         run: npm install
+
+#       - name: 📧 Sending Report
+#         env:
+#           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+#           REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}
+#           WORKFLOW_STATUS: ${{ needs.api-success.result }}
+#           SUCCESS_DETAILS: ${{ needs.api-success.outputs.details }}
+#           FAILURE_DETAILS: ${{ needs.api-failure.outputs.details }}
+#           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+#         run: |
+#           echo "=== DEBUG SUCCESS_DETAILS ==="
+#           echo "$SUCCESS_DETAILS"
+#           echo "=== DEBUG FAILURE_DETAILS ==="
+#           echo "$FAILURE_DETAILS"
+#           node send-report.js
+
 name: 🚀 POC - Automatic API Calls
 
 on:
@@ -62,8 +159,73 @@ jobs:
           echo "=== GITHUB_OUTPUT ==="
           cat $GITHUB_OUTPUT
 
-  send-report:
-    name: 📧 Sending Email Report
+  generate-and-commit-report: # New job for report generation and commit
+    name: 📝 Generate and Commit Report
+    runs-on: ubuntu-latest
+    needs: [api-success, api-failure]
+    if: always() # Run even if previous jobs failed, to ensure report is generated
+
+    steps:
+      - name: 📥 Code Checkout
+        uses: actions/checkout@v4 # Use v4 for better permissions with GITHUB_TOKEN
+
+      - name: 🟢 Node.js Installation
+        uses: actions/setup-node@v4 # Use v4
+        with:
+          node-version: 20 # Use a stable Node.js version, e.g., 20 or 22
+
+      - name: 📦 Dependencies Installation
+        run: npm install
+
+      - name: ⚙️ Set up Git config
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: 🗓️ Get current timestamp
+        id: get_timestamp
+        run: echo "TIMESTAMP=$(date +'%Y%m%d%H%M%S')" >> $GITHUB_OUTPUT
+
+      - name: 📝 Generate Report File
+        env:
+          RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
+          REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}
+          WORKFLOW_STATUS: ${{ needs.api-success.result }}
+          SUCCESS_DETAILS: ${{ needs.api-success.outputs.details }}
+          FAILURE_DETAILS: ${{ needs.api-failure.outputs.details }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          REPORT_FILE_PATH: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html
+        run: |
+          node send-report.js # This will now write to the file specified by REPORT_FILE_PATH
+          echo "Generated report at: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html"
+          echo "Report generation completed."
+
+      - name: ➕ Add report to .gitignore (if not present)
+        run: |
+          if ! grep -q "^report/$" .gitignore; then
+            echo "report/" >> .gitignore
+            echo "Added report/ to .gitignore"
+          else
+            echo "report/ already in .gitignore"
+          fi
+
+      - name: 📤 Commit and Push Report
+        run: |
+          git add report/ .gitignore
+          git commit -m "add and save report_${{ steps.get_timestamp.outputs.TIMESTAMP }}" || echo "No changes to commit"
+          git push
+
+  # You can keep the send-report job if you still want to send emails,
+  # but modify it to NOT generate the file, or keep it as is if you want both.
+  # If you want only email and file, the current send-report.js handles it.
+  # If you want to separate, you would need two distinct JS files or conditional logic.
+  # For now, I've integrated everything into `generate-and-commit-report` for clarity.
+  # If you want to keep the email sending in a separate job, let me know.
+  # I'll assume you want email sending to continue as before, but the file generation
+  # and commit happens in a dedicated job.
+
+  send-email-only: # Renamed and adjusted this job to only send email
+    name: 📧 Sending Email Report (Only)
     runs-on: ubuntu-latest
     needs: [api-success, api-failure]
     if: always()
@@ -88,9 +250,11 @@ jobs:
           SUCCESS_DETAILS: ${{ needs.api-success.outputs.details }}
           FAILURE_DETAILS: ${{ needs.api-failure.outputs.details }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          # Do NOT set REPORT_FILE_PATH here, so the JS script skips file writing for this job
         run: |
           echo "=== DEBUG SUCCESS_DETAILS ==="
           echo "$SUCCESS_DETAILS"
           echo "=== DEBUG FAILURE_DETAILS ==="
           echo "$FAILURE_DETAILS"
           node send-report.js
+
