@@ -4,11 +4,10 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "postinstall": "node install-puppeteer.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
-  "author": "sleger",
+  "author": "",
   "license": "ISC",
   "dependencies": {
     "axios": "^1.15.2",
