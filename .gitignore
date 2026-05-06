@@ -6,9 +6,6 @@ __MACOSX/
 .LSOverride
 Icon[]
 
-# Ignore reports directory
-report/
-
 # Others
 package-lock.json
 report.html
