@@ -165,14 +165,17 @@ jobs:
     needs: [api-success, api-failure]
     if: always() # Run even if previous jobs failed, to ensure report is generated
 
+    permissions: # Explicitly grant permissions for contents write
+      contents: write
+
     steps:
       - name: 📥 Code Checkout
-        uses: actions/checkout@v5
+        uses: actions/checkout@v4
 
       - name: 🟢 Node.js Installation
-        uses: actions/setup-node@v5
+        uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 22
 
       - name: 📦 Dependencies Installation
         run: npm install
@@ -196,12 +199,22 @@ jobs:
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           REPORT_FILE_PATH: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html
         run: |
-          node send-report.js # This will now write to the file specified by REPORT_FILE_PATH
+          node send-report.js
           echo "Generated report at: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html"
           echo "Report generation completed."
 
+      - name: ➕ Add report to .gitignore (if not present)
+        run: |
+          if ! grep -q "^report/$" .gitignore; then
+            echo "report/" >> .gitignore
+            echo "Added report/ to .gitignore"
+          else
+            echo "report/ already in .gitignore"
+          fi
+
       - name: 📤 Commit and Push Report
         run: |
+          git add report/ .gitignore # <<< Added 'git add report/' and '.gitignore'
           git commit -m "add and save report_${{ steps.get_timestamp.outputs.TIMESTAMP }}" || echo "No changes to commit"
           git push
 
