@@ -167,12 +167,12 @@ jobs:
 
     steps:
       - name: 📥 Code Checkout
-        uses: actions/checkout@v4 # Use v4 for better permissions with GITHUB_TOKEN
+        uses: actions/checkout@v5
 
       - name: 🟢 Node.js Installation
-        uses: actions/setup-node@v4 # Use v4
+        uses: actions/setup-node@v5
         with:
-          node-version: 20 # Use a stable Node.js version, e.g., 20 or 22
+          node-version: 24
 
       - name: 📦 Dependencies Installation
         run: npm install
@@ -200,18 +200,8 @@ jobs:
           echo "Generated report at: report/report_${{ steps.get_timestamp.outputs.TIMESTAMP }}.html"
           echo "Report generation completed."
 
-      - name: ➕ Add report to .gitignore (if not present)
-        run: |
-          if ! grep -q "^report/$" .gitignore; then
-            echo "report/" >> .gitignore
-            echo "Added report/ to .gitignore"
-          else
-            echo "report/ already in .gitignore"
-          fi
-
       - name: 📤 Commit and Push Report
         run: |
-          git add report/ .gitignore
           git commit -m "add and save report_${{ steps.get_timestamp.outputs.TIMESTAMP }}" || echo "No changes to commit"
           git push
 
