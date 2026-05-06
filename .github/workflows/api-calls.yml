@@ -446,7 +446,7 @@ jobs:
             libgbm-dev \
             libxss1 \
             libnss3 \
-            libasound2t64 # Corrected for Ubuntu 24.04
+            libasound2t64
 
       - name: 📦 Dependencies Installation
         run: npm install
