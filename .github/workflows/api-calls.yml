@@ -423,7 +423,7 @@ jobs:
           cat $GITHUB_OUTPUT
 
   send-report:
-    name: ✉️ Sending Email Report
+    name: 📧 Sending Email Report
     runs-on: ubuntu-latest
     needs: [api-success, api-failure]
     if: always()
@@ -435,17 +435,23 @@ jobs:
       - name: 🟢 Node.js Installation
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install Puppeteer dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -yq libgconf-2-4 libnss3 libasound2 libatk-bridge2.0-0 libgtk-3-0 libxss1 libgbm-dev
+          sudo apt-get install -yq \
+            libatk-bridge2.0-0 \
+            libgtk-3-0 \
+            libgbm-dev \
+            libxss1 \
+            libnss3 \
+            libasound2t64 # Corrected for Ubuntu 24.04
 
       - name: 📦 Dependencies Installation
         run: npm install
 
-      - name: 💌 Sending Report with PDF Attachment
+      - name: 📧 Sending Report with PDF Attachment
         env:
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           REPORT_EMAIL: ${{ secrets.REPORT_EMAIL }}
@@ -456,6 +462,6 @@ jobs:
         run: |
           echo "=== DEBUG SUCCESS_DETAILS ==="
           echo "$SUCCESS_DETAILS"
-          echo "=== DEBUG FAILURE_DETAILS ==-"
+          echo "=== DEBUG FAILURE_DETAILS ==="
           echo "$FAILURE_DETAILS"
           node send-report.js
