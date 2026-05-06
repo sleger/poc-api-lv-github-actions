@@ -4,7 +4,7 @@ const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const runUrl = process.env.RUN_URL || "#";
-const date = new Date().toLocaleDateString("en-GB", {
+const date = new Date().toLocaleDateString("fr-FR", {
   year: "numeric", month: "numeric", day: "numeric",
 });
 
@@ -197,7 +197,7 @@ async function sendReport() {
     const { data, error } = await resend.emails.send({
       from: "api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
-      subject: `🕹 API Tests Report — ${date} - ${time}`,
+      subject: `🕹 API Tests Report • ${timestamp}`,
       html: `
         <p>Your API test report for ${date} at ${time} is attached.</p>
         <p>You can also view the full report details on GitHub Actions: <a href="${runUrl}">View details</a></p>
