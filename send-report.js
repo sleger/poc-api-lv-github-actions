@@ -1,19 +1,29 @@
 const fs = require('fs');
 const path = require('path');
+const html_to_pdf = require('html-pdf-node'); // Import html-pdf-node
 const { Resend } = require("resend");
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 const runUrl = process.env.RUN_URL || "#";
-const date = new Date().toLocaleDateString("fr-FR", {
-  year: "numeric", month: "numeric", day: "numeric",
+
+// Utilisation du format YYYYMMDD pour la date
+const now = new Date();
+const year = now.getFullYear();
+const month = (now.getMonth() + 1).toString().padStart(2, '0');
+const day = now.getDate().toString().padStart(2, '0');
+const formattedDateYYYYMMDD = `${year}${month}${day}`;
+
+const date = now.toLocaleDateString("fr-FR", {
+  weekday: "long", year: "numeric", month: "long", day: "numeric",
 });
 
-const time = new Date().toLocaleTimeString("fr-FR", {
+const time = now.toLocaleTimeString("fr-FR", {
   hour: "2-digit",
   minute: "2-digit",
   second: "2-digit",
 });
 
+// 🔧 Parse JSON directly from the environment variable
 function parseResults(raw) {
   try {
     if (!raw || raw.trim() === "") {
@@ -59,7 +69,7 @@ function generateTable(results, title, color) {
         <span style="background-color:${r.status >= 200 && r.status < 300 ? "#d4edda" : "#f8d7da"};color:${r.status >= 200 && r.status < 300 ? "#28a745" : "#dc3545"};padding:3px 10px;border-radius:4px;font-weight:bold;font-size:12px;">${r.status}</span>
       </td>
       <td style="padding:10px 15px;text-align:center;color:#888;font-size:13px;">${r.duration}ms</td>
-      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "🅾️"}</td>
+      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "❌"}</td>
       <td style="padding:10px 15px;font-size:12px;color:#dc3545;">${r.error ? r.error : '<span style="color:#28a745;">—</span>'}</td>
     </tr>
   `).join("");
@@ -68,7 +78,7 @@ function generateTable(results, title, color) {
     <div style="margin-bottom:30px;">
       <div style="background-color:${color};padding:12px 20px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
         <h2 style="color:white;margin:0;font-size:16px;">${title}</h2>
-        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; 🅾️ ${fail} / ${total}</span>
+        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; ❌ ${fail} / ${total}</span>
       </div>
       <table style="width:100%;border-collapse:collapse;background:white;border-radius:0 0 8px 8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <thead>
@@ -135,7 +145,7 @@ function generateSummary(successResults, failureResults) {
       <div>&nbsp;</div>
 
       <div style="flex:1;background:white;border-radius:8px;padding:20px;text-align:center;box-shadow:0 2px 8px rgba(0,0,0,0.08);border-top:4px solid #dc3545;">
-        <div style="font-size:36px;font-weight:bold;color:#dc3545;"> 🅾️ ${totalFail}</div>
+        <div style="font-size:36px;font-weight:bold;color:#dc3545;"> ❌ ${totalFail}</div>
         <div style="font-size:13px;color:#888;margin-top:5px;">Failures</div>
       </div>
 
@@ -154,7 +164,7 @@ async function sendReport() {
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#f0f2f5;padding:20px;">
       <div style="background:linear-gradient(135deg,#0366d6,#6f42c1);padding:30px;border-radius:12px;margin-bottom:25px;text-align:center;">
-        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;">🕹 POC GitHub Actions — API Report</h1>
+        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;">🚀 POC GitHub Actions — API Report</h1>
         <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px;">📅 ${date}</p>
       </div>
       ${generateSummary(successResults, failureResults)}
@@ -171,37 +181,54 @@ async function sendReport() {
       </div>
     </div>`;
 
-  const now = new Date();
-  const year = now.getFullYear().toString();
-  const month = (now.getMonth() + 1).toString().padStart(2, '0');
-  const day = now.getDate().toString().padStart(2, '0');
-  const hours = now.getHours().toString().padStart(2, '0');
-  const minutes = now.getMinutes().toString().padStart(2, '0');
-  const seconds = now.getSeconds().toString().padStart(2, '0');
-  const timestamp = `${year}${month}${day}_${hours}${minutes}${seconds}`;
-  const reportFileName = `api_report_${timestamp}.html`;
-  const tempDirPath = path.join(__dirname, 'temp_reports');
-  const tempHtmlFilePath = path.join(tempDirPath, reportFileName);
+  // Generate a timestamp for the filename - using the YYYYMMDD format for the date part
+  const timestampForFileName = `${formattedDateYYYYMMDD}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
+  const reportFileName = `api_report_${timestampForFileName}.pdf`; // Changed to PDF filename
+  const tempDirPath = path.join(__dirname, 'temp_reports'); // Temporary directory
+  const tempPdfFilePath = path.join(tempDirPath, reportFileName); // Temporary PDF file
+
+  let file = { content: htmlContent };
+  let options = {
+    path: tempPdfFilePath,
+    format: 'A4',
+    printBackground: true,
+    margin: {
+      top: '20mm',
+      right: '20mm',
+      bottom: '20mm',
+      left: '20mm'
+    },
+    // Args for html-pdf-node (which passes them to Puppeteer)
+    args: [
+      '--no-sandbox', // Required for GitHub Actions environments
+      '--disable-setuid-sandbox',
+      '--single-process', // Often helps in CI environments
+    ],
+  };
 
   try {
+    // Ensure the temporary directory exists
     if (!fs.existsSync(tempDirPath)) {
       fs.mkdirSync(tempDirPath, { recursive: true });
     }
 
-    fs.writeFileSync(tempHtmlFilePath, htmlContent);
-    console.log(`Temporary HTML file created at: ${tempHtmlFilePath}`);
+    // Generate PDF using html-pdf-node
+    console.log("Generating PDF using html-pdf-node...");
+    await html_to_pdf.generatePdf(file, options);
+    console.log(`PDF report generated at: ${tempPdfFilePath}`);
 
-    const attachmentData = fs.readFileSync(tempHtmlFilePath);
+    // Read the PDF file buffer for attachment
+    const attachmentData = fs.readFileSync(tempPdfFilePath);
 
-    // Send email with the HTML report as an attachment
+    // Send email with the PDF report as an attachment
     const { data, error } = await resend.emails.send({
       from: "api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
-      subject: `🕹 API Tests Report • ${timestamp}`,
+      subject: `🚀 API Tests Report — ${date} - ${time}`,
       html: `
-        <p>Your API test report for ${date} at ${time} is attached.</p>
+        <p>Your API test report for ${date} at ${time} is attached as a PDF.</p>
         <p>You can also view the full report details on GitHub Actions: <a href="${runUrl}">View details</a></p>
-        <p>Please open the attached <b>${reportFileName}</b> file in your browser to view the report.</p>
+        <p>Please open the attached <b>${reportFileName}</b> to view the report.</p>
         <br/>
         <p style="font-size:12px;color:#999;">🤖 Report automatically generated by GitHub Actions</p>
       `,
@@ -209,7 +236,7 @@ async function sendReport() {
         {
           filename: reportFileName,
           content: attachmentData,
-          contentType: 'text/html',
+          contentType: 'application/pdf', // Changed content type to PDF
         },
       ],
     });
@@ -222,14 +249,16 @@ async function sendReport() {
     console.log("Report sent! ID:", data.id);
   } catch (err) {
     console.error("Error during report generation or sending:", err.message);
-    console.error(err);
+    console.error(err); // Log full error for more details
     process.exit(1);
   } finally {
+    // Clean up temporary files and directory
     try {
-      if (fs.existsSync(tempHtmlFilePath)) {
-        fs.unlinkSync(tempHtmlFilePath);
-        console.log(`Temporary HTML file deleted: ${tempHtmlFilePath}`);
+      if (fs.existsSync(tempPdfFilePath)) {
+        fs.unlinkSync(tempPdfFilePath);
+        console.log(`Temporary PDF file deleted: ${tempPdfFilePath}`);
       }
+      // Optionally remove the temporary directory if it's empty
       if (fs.existsSync(tempDirPath) && fs.readdirSync(tempDirPath).length === 0) {
         fs.rmdirSync(tempDirPath);
         console.log(`Temporary report directory deleted: ${tempDirPath}`);
