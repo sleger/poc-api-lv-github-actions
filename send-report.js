@@ -6,7 +6,6 @@ const { Resend } = require("resend");
 const resend = new Resend(process.env.RESEND_API_KEY);
 const runUrl = process.env.RUN_URL || "#";
 
-// Utilisation du format YYYYMMDD pour la date
 const now = new Date();
 const year = now.getFullYear();
 const month = (now.getMonth() + 1).toString().padStart(2, '0');
@@ -69,7 +68,7 @@ function generateTable(results, title, color) {
         <span style="background-color:${r.status >= 200 && r.status < 300 ? "#d4edda" : "#f8d7da"};color:${r.status >= 200 && r.status < 300 ? "#28a745" : "#dc3545"};padding:3px 10px;border-radius:4px;font-weight:bold;font-size:12px;">${r.status}</span>
       </td>
       <td style="padding:10px 15px;text-align:center;color:#888;font-size:13px;">${r.duration}ms</td>
-      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "❌"}</td>
+      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "🅾️"}</td>
       <td style="padding:10px 15px;font-size:12px;color:#dc3545;">${r.error ? r.error : '<span style="color:#28a745;">—</span>'}</td>
     </tr>
   `).join("");
@@ -78,7 +77,7 @@ function generateTable(results, title, color) {
     <div style="margin-bottom:30px;">
       <div style="background-color:${color};padding:12px 20px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
         <h2 style="color:white;margin:0;font-size:16px;">${title}</h2>
-        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; ❌ ${fail} / ${total}</span>
+        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; 🅾️ ${fail} / ${total}</span>
       </div>
       <table style="width:100%;border-collapse:collapse;background:white;border-radius:0 0 8px 8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <thead>
@@ -224,7 +223,7 @@ async function sendReport() {
     const { data, error } = await resend.emails.send({
       from: "api-report@resend.dev",
       to: process.env.REPORT_EMAIL,
-      subject: `🚀 API Tests Report — ${date} - ${time}`,
+      subject: `🕹 API Tests Report — ${date} - ${time}`,
       html: `
         <p>Your API test report for ${date} at ${time} is attached as a PDF.</p>
         <p>You can also view the full report details on GitHub Actions: <a href="${runUrl}">View details</a></p>
@@ -236,7 +235,7 @@ async function sendReport() {
         {
           filename: reportFileName,
           content: attachmentData,
-          contentType: 'application/pdf', // Changed content type to PDF
+          contentType: 'application/pdf',
         },
       ],
     });
