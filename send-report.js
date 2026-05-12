@@ -68,7 +68,7 @@ function generateTable(results, title, color) {
         <span style="background-color:${r.status >= 200 && r.status < 300 ? "#d4edda" : "#f8d7da"};color:${r.status >= 200 && r.status < 300 ? "#28a745" : "#dc3545"};padding:3px 10px;border-radius:4px;font-weight:bold;font-size:12px;">${r.status}</span>
       </td>
       <td style="padding:10px 15px;text-align:center;color:#888;font-size:13px;">${r.duration}ms</td>
-      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "🅾️"}</td>
+      <td style="padding:10px 15px;text-align:center;font-size:18px;">${r.result === "SUCCESS" ? "✅" : "❌"}</td>
       <td style="padding:10px 15px;font-size:12px;color:#dc3545;">${r.error ? r.error : '<span style="color:#28a745;">—</span>'}</td>
     </tr>
   `).join("");
@@ -77,7 +77,7 @@ function generateTable(results, title, color) {
     <div style="margin-bottom:30px;">
       <div style="background-color:${color};padding:12px 20px;border-radius:8px 8px 0 0;display:flex;justify-content:space-between;align-items:center;">
         <h2 style="color:white;margin:0;font-size:16px;">${title}</h2>
-        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; 🅾️ ${fail} / ${total}</span>
+        <span style="color:white;font-size:14px;">✅ ${success} / ${total} &nbsp;&nbsp; ❌ ${fail} / ${total}</span>
       </div>
       <table style="width:100%;border-collapse:collapse;background:white;border-radius:0 0 8px 8px;overflow:hidden;box-shadow:0 2px 8px rgba(0,0,0,0.08);">
         <thead>
@@ -163,7 +163,7 @@ async function sendReport() {
   const htmlContent = `
     <div style="font-family:Arial,sans-serif;max-width:800px;margin:0 auto;background-color:#f0f2f5;padding:20px;">
       <div style="background:linear-gradient(135deg,#0366d6,#6f42c1);padding:30px;border-radius:12px;margin-bottom:25px;text-align:center;">
-        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;">🚀 POC GitHub Actions — API Report</h1>
+        <h1 style="color:white;margin:0 0 8px 0;font-size:26px;"> 🕹 POC GitHub Actions — API Report</h1>
         <p style="color:rgba(255,255,255,0.85);margin:0;font-size:14px;">📅 ${date}</p>
       </div>
       ${generateSummary(successResults, failureResults)}
@@ -180,7 +180,6 @@ async function sendReport() {
       </div>
     </div>`;
 
-  // Generate a timestamp for the filename - using the YYYYMMDD format for the date part
   const timestampForFileName = `${formattedDateYYYYMMDD}_${now.getHours().toString().padStart(2, '0')}${now.getMinutes().toString().padStart(2, '0')}${now.getSeconds().toString().padStart(2, '0')}`;
   const reportFileName = `api_report_${timestampForFileName}.pdf`; // Changed to PDF filename
   const tempDirPath = path.join(__dirname, 'temp_reports'); // Temporary directory
@@ -199,9 +198,9 @@ async function sendReport() {
     },
     // Args for html-pdf-node (which passes them to Puppeteer)
     args: [
-      '--no-sandbox', // Required for GitHub Actions environments
+      '--no-sandbox',
       '--disable-setuid-sandbox',
-      '--single-process', // Often helps in CI environments
+      '--single-process',
     ],
   };
 
